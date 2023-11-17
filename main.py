@@ -77,7 +77,7 @@ for i in torch.arange(prune_size):
             print('current structure: {0}'.format(current_structure))
             pruned_model = selectedModel(input_channels=input_channels, out_classes=out_classes, size=1)
             pruned_model.set_structure(structure=current_structure)
-            optimizer = torch.optim.Adam(pruned_model.parameters(), lr=2e-3, weight_decay=1e-4)
+            optimizer = torch.optim.Adam(pruned_model.parameters(), lr=1e-3, weight_decay=1e-4)
             scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=3, factor=0.1, verbose=True)
             pruned_model = prune_model(prev_model, pruned_model, prev_structure, current_structure)
             pruned_accuracy, pruned_model = train(pruned_model, train_loader, valid_loader, epochs, criterion, optimizer, scheduler, device)

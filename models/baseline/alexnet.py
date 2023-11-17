@@ -36,9 +36,9 @@ class AlexNet(nn.Module):
         x = F.relu(x)
         x = self.maxpool2(x)
         x = x.view(-1, self.structure[4])
-        x = self.fc0(x)
+        x = self.linear0(x)
         x = F.relu(x)
-        x = self.fc1(x)
+        x = self.linear1(x)
         x = F.softmax(x, dim=1)
         return x
     
@@ -60,8 +60,9 @@ class AlexNet(nn.Module):
         self.conv4 = nn.Conv2d(self.structure[3], self.structure[4], kernel_size=3, stride=1, padding=1)
         self.maxpool2 = nn.MaxPool2d(kernel_size=3, stride=1, padding=0)
 
-        self.fc0 = nn.Linear(self.structure[4], self.structure[5])
-        self.fc1 = nn.Linear(self.structure[5], self.out_classes)   
+        self.linear0 = nn.Linear(self.structure[4], self.structure[5])
+        self.linear1 = nn.Linear(self.structure[5], self.out_classes)
+        self.layers = [self.conv0, self.conv1, self.conv2, self.conv3, self.conv4, self.linear0, self.linear1] 
 
     def set_structure(self, structure:list=None):
         if structure is not None:
@@ -78,8 +79,9 @@ class AlexNet(nn.Module):
             self.conv4 = nn.Conv2d(self.structure[3], self.structure[4], kernel_size=3, stride=1, padding=1)
             self.maxpool2 = nn.MaxPool2d(kernel_size=3, stride=1, padding=0)
 
-            self.fc0 = nn.Linear(self.structure[4], self.structure[5])
-            self.fc1 = nn.Linear(self.structure[5], self.out_classes) 
+            self.linear0 = nn.Linear(self.structure[4], self.structure[5])
+            self.linear1 = nn.Linear(self.structure[5], self.out_classes)
+            self.layers = [self.conv0, self.conv1, self.conv2, self.conv3, self.conv4, self.linear0, self.linear1] 
 
     def get_macs(self, input_shape):
         return profile(self, inputs=(torch.empty(1, *input_shape),), verbose=False)[0]

@@ -1,60 +1,19 @@
-import os
 import torch
+import torchvision
+import torchvision.transforms as transforms
 
-from torch.utils.data.dataset import Subset
-from torchvision.datasets import CIFAR10
-import torchvision.transforms as tvt
-import math
-import random
+transform = transforms.Compose(
+    [transforms.ToTensor(),
+     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
+def load_test_data(batch_size: int) -> torch.utils.data.DataLoader:
+    testset = torchvision.datasets.CIFAR10(root='./datasets', train=False, download=True, transform=transform)
+    test_loader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False)
+    return test_loader
 
-def random_split(dataset, lengths, generator=None):
-    if sum(lengths) != len(dataset):
-        raise ValueError("Sum of input lengths does not equal the length of the dataset.")
-    if generator is None:
-        generator = torch.Generator()
-    # Set the seed of the generator
-    if isinstance(generator, torch.Generator):
-        torch.manual_seed(generator.seed())
-
-    indices = torch.randperm(len(dataset), generator=generator).tolist()
-
-    split_datasets = []
-    current_idx = 0
-
-    for length in lengths:
-        split_indices = indices[current_idx:current_idx + length]
-        split_dataset = torch.utils.data.Subset(dataset, split_indices)
-        split_datasets.append(split_dataset)
-        current_idx += length
-
-    return split_datasets
-
-
-
-def load_train_val_data(batch_size=64, train_val_split=0.9, shuffle=True, cuda=False):
-    loader_kwargs = {'num_workers': 0, 'pin_memory': False} if cuda else {}
-    transform_train = tvt.Compose([ tvt.RandomCrop(32, padding=4), tvt.RandomHorizontalFlip(), tvt.ToTensor(), tvt.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)) ])
-    loader = torch.utils.data.DataLoader( 
-        CIFAR10(os.path.join('datasets', 'cifar10'),
-            train=True, download=True, transform=transform_train), 
-            batch_size=batch_size, shuffle=shuffle, **loader_kwargs)
-
-    train_len = int(train_val_split * len(loader.dataset))
-    val_len = len(loader.dataset) - train_len
-
-    train_data, val_data = random_split(loader.dataset, [train_len, val_len])
-    # train_data, val_data = torch.utils.data.random_split(loader.dataset, [train_val_split, 1-train_val_split]) # generator=torch.Generator().manual_seed(42)
-    train_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, shuffle=shuffle, **loader_kwargs)
-    val_loader = torch.utils.data.DataLoader(val_data, batch_size=batch_size, shuffle=shuffle, **loader_kwargs)
-    return train_loader, val_loader
-
-
-def load_test_data(batch_size=1000, shuffle=False, sampler=None, cuda=False):
-    loader_kwargs = {'num_workers': 0, 'pin_memory': False} if cuda else {}
-    transform_test =  tvt.Compose([ tvt.ToTensor(), tvt.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))  ])
-    loader = torch.utils.data.DataLoader( 
-        CIFAR10(os.path.join('datasets', 'cifar10'), 
-        train=False, download=True, transform=transform_test), 
-        batch_size=batch_size, shuffle=False, **loader_kwargs)
-    return loader
+def load_train_val_data(batch_size: int, train_val_split: float) -> (torch.utils.data.DataLoader, torch.utils.data.DataLoader):
+    dataset = torchvision.datasets.CIFAR10(root='./datasets', train=True, download=True, transform=transform)
+    trainset, valset = torch.utils.data.random_split(dataset, [int(train_val_split*len(dataset)), len(dataset)-int(train_val_split*len(dataset))])
+    train_loader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True)
+    valid_loader = torch.utils.data.DataLoader(valset, batch_size=batch_size, shuffle=False)
+    return train_loader, valid_loader
