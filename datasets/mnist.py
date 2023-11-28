@@ -30,7 +30,7 @@ def random_split(dataset, lengths, generator=None):
     return split_datasets
 
 
-def load_train_val_data(batch_size=64, train_val_split=0.9, shuffle=True, cuda=False):
+def load_train_val_data(batch_size=64, train_val_split=0.9, weighted: bool=False, shuffle=True, cuda=False):
     loader_kwargs = {'num_workers': 0, 'pin_memory': False} if cuda else {}
     transform_train = tvt.Compose([ tvt.CenterCrop(32), tvt.RandomHorizontalFlip(), tvt.ToTensor()])
     loader = torch.utils.data.DataLoader( 
