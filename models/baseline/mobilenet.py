@@ -65,6 +65,7 @@ class MobileNetV2(nn.Module):
         self.input_size = input_size
         self.width_mult = width_mult
         self.size = size
+        self.input_size = input_size
 
         self.interverted_residual_settings = {
             1:[
@@ -107,7 +108,10 @@ class MobileNetV2(nn.Module):
         assert self.input_size % 32 == 0
         input_channels = int(self.input_channels * self.width_mult)
         self.last_channel = int(self.last_channel * self.width_mult) if self.width_mult > 1.0 else self.last_channel
-        self.layers = [conv_bn(3, input_channels, 1).conv]
+        if self.input_size == 32:
+            self.layers = [conv_bn(3, input_channels, 1).conv]
+        else:
+            self.layers = [conv_bn(3, input_channels, 2).conv]
         for t, c, n, s in self.interverted_residual_setting:
             output_channel = int(c * self.width_mult)
             for i in range(n):
@@ -117,7 +121,7 @@ class MobileNetV2(nn.Module):
                     self.layers.append(self.block(input_channels, output_channel, 1, expand_ratio=t))
                 input_channels = output_channel
         self.layers.append(conv_1x1_bn(input_channels, self.last_channel).conv)
-        self.features = nn.Sequential(*self.layers)
+        self.representation = nn.Sequential(*self.layers)
         self.classifier = nn.Sequential(
             nn.Dropout(0.2),
             nn.Linear(self.last_channel, self.out_classes)
@@ -143,7 +147,7 @@ class MobileNetV2(nn.Module):
             self._set_structure()
 
     def forward(self, x):
-        x = self.features(x)
+        x = self.representation(x)
         x = x.mean(3).mean(2)
         x = self.classifier(x)
         x = nn.functional.log_softmax(x, dim=1)

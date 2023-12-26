@@ -10,6 +10,7 @@ class ResNet8(nn.Module):
                           2: [10,10,26,42,42],
                           3: [6,8,24,32,32],
                           4: [5,7,18,32,32],
+                          5: [3,6,16,32,32],
                           8: [2,4,12,24,16]}
         self.size = size
         self.input_channels = input_channels
